@@ -1,5 +1,5 @@
 import {createColumn, getColumns} from './columns.js';
-import {createCard, getCards, addCard, removeCard, eventListener} from './cards.js';
+import {createCardElement, getCards, addCard, removeCard, eventPressingEnterListener} from './cards.js';
 
 export async function outputElements(){
 
@@ -21,7 +21,7 @@ export async function outputElements(){
 			{
 
 				if(+colum.id === objCard[j].columnId){
-					let card = createCard(objCard[j]);
+					let card = createCardElement(objCard[j]);
 
 					colum.appendChild(card);
 				}
@@ -31,13 +31,9 @@ export async function outputElements(){
 	}
 	parentElement.appendChild(fragment);//добавление в родительский элемент
 
-	let elemWithEventForAdding = document.querySelector('.board');
-  	elemWithEventForAdding.addEventListener('click', addCard);
+	let mainTableElement = document.querySelector('.board');
 
-  	let elemWithEventForRemoving = document.querySelector('.board');
-  	elemWithEventForRemoving.addEventListener('click', removeCard);
-
-
-  	let elemWithEventForUpdating = document.querySelector('.board');
-  	elemWithEventForUpdating.addEventListener('keypress', eventListener);
+  	mainTableElement.addEventListener('click', addCard);
+  	mainTableElement.addEventListener('click', removeCard);
+  	mainTableElement.addEventListener('keypress', eventPressingEnterListener);
 }
