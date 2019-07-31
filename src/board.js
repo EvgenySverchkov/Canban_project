@@ -1,8 +1,8 @@
 import {createColumn, getColumns} from './columns.js';
 import {createCardElement, getCards, addCard, removeCard, eventPressingEnterListener} from './cards.js';
+import {dragStartListener, dragOverListener, dropListener} from './dragNdrop.js';
 
 export async function outputElements(){
-
 	let objColumn = await getColumns();
 	let objCard = await getCards();
 	//let objColumn = getColumns();//объекты из хранилища 
@@ -34,6 +34,18 @@ export async function outputElements(){
 	let mainTableElement = document.querySelector('.board');
 
   	mainTableElement.addEventListener('click', addCard);
-  	mainTableElement.addEventListener('click', removeCard);
+  	mainTableElement.addEventListener('click', async event=>{
+  		 if(event.target.parentNode.id == event.target.getAttribute("data-card-id"))//проверка для исключения всплытия
+    	{
+  			const cardId = event.target.getAttribute("data-card-id");
+  			removeCard(cardId);
+  			event.target.closest(".card").remove();//удаление из доски
+  		}
+  	});
   	mainTableElement.addEventListener('keypress', eventPressingEnterListener);
+  	mainTableElement.addEventListener('focusout', eventPressingEnterListener);
+
+  	document.addEventListener("dragstart", dragStartListener);
+  	document.addEventListener("dragover", dragOverListener);
+  	document.addEventListener("drop", dropListener);
 }

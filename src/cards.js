@@ -14,12 +14,14 @@ export function createCardElement(infoOfCard){
 	contentNode.className = 'card-content';
 	contentNode.contentEditable = 'true';
 	contentNode.textContent = infoOfCard.title;
+	contentNode.setAttribute("draggable", false);
 
 	let removeButton = document.createElement('button');//кнопка удаления карточки
 	removeButton.className = 'removeButton';
   
 	newCard.setAttribute("data-column", infoOfCard.columnId);//добавляем атрибут для поиска соотвецтвующей коллонки
 	removeButton.setAttribute("data-card-id", infoOfCard.id);//атрибут для обнаружения в какой карточке находится кнопка
+	newCard.setAttribute("draggable", true);
 
 	newCard.appendChild(removeButton);
 	newCard.appendChild(contentNode);
@@ -49,8 +51,6 @@ export async function addCard(event){
 
       let newElem = createCardElement(await addNewCardObj());//создаем новый элемент DOM по новому объекту
       event.target.parentNode.appendChild(newElem);//добавляем элемент DOM в колонку
-
-
     }
     else
     	return;
@@ -63,37 +63,24 @@ function createNewArrCardObj(text, columnId){
    	return objForStorage;    
 }
 //////////////////////////////удаление карточки/////////////////////////////////////////////////
-export async function removeCard(event){
-    if(event.target.parentNode.id == event.target.getAttribute("data-card-id"))//проверка для исключения всплытия
-    {
-      let idCard = event.target.getAttribute("data-card-id");
-      let arrOfObjCards = await getCards(); 
-
-      fetch(`http://localhost:8089/api/card/${idCard}`, {method:'delete'});
-
-      /*let strObjForStorage = JSON.stringify(removingObjFromStorage);
-      localStorage.setItem('arrCardsObj', strObjForStorage);*/
-      event.target.closest(".card").remove();//удаление из доски
-    }
+export async function removeCard(idCard){
+	fetch(`http://localhost:8089/api/card/${idCard}`, {method:'delete'});
 }
 
-export  function eventPressingEnterListener(event){
+export function eventPressingEnterListener(event){
 	if(event.target.className == 'card-content'){
-		
 		let idCard = +event.target.closest(".card").id;
 		let text = event.target.textContent;
-		if(event.keyCode === 13){
-		event.preventDefault();
-		updateCard(idCard, text);
+		if(event.keyCode === 13 || event.type === 'focusout'){
+			event.preventDefault();
+			updateCard(idCard, text);
+		}
 	}
-	}
-
 }
 
 
 async function updateCard(cardId, text){
 	let buff = {title: text};
-
 	await fetch(`http://localhost:8089/api/card/${cardId}`, {
 		method:'PATCH', 
 		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },

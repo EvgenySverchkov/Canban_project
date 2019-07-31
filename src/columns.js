@@ -2,7 +2,7 @@ export function getColumns(){
 	const url = 'http://localhost:8089/api/column';
 	return fetch(url).then(data=>data.json());
 }
-/////////////////////////////////////создание DOM елемента///////////////////////////////////////////////////////
+
 export function createColumn(InfoOfColumn){
 	let newCol = document.createElement('div');//создаем елемнт колонки
 	newCol.className = 'columns';//добавляем имя класса (для css)
