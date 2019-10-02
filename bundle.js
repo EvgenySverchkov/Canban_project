@@ -110,8 +110,8 @@ __webpack_require__.r(__webpack_exports__);
 async function outputElements(){
 
 	document.body.appendChild(Object(_toogleTheme_js__WEBPACK_IMPORTED_MODULE_3__["toogleTheme"])());
-	Object(_serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeWhenLoadPage"])();
-	
+
+	Object(_serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeWhenLoadPage"])();//эта функция не должна менять тему?
 	let objColumn = await Object(_columns_js__WEBPACK_IMPORTED_MODULE_0__["getColumns"])();
 	let objCard = await Object(_cards_js__WEBPACK_IMPORTED_MODULE_1__["getCards"])();
 
@@ -153,8 +153,8 @@ async function outputElements(){
 	document.addEventListener("dragstart", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dragStartListener"]);
 	document.addEventListener("dragover", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dragOverListener"]);
 	document.addEventListener("drop", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dropListener"]);
-
-	document.getElementById('toggle_bg').addEventListener('click', _serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeToogleHandler"]);
+	let toogle = document.querySelector('.toogle_checkbox');
+	toogle.addEventListener('click', _serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeChanger"]);
 }
 
 
@@ -339,7 +339,6 @@ function dragStartListener(event){
 
 function dropListener(event){
 	if(event.target.className === 'columns'){
-		console.log(event.target.className);
 		dragged.parentNode.removeChild(dragged);
 		event.target.appendChild(dragged);
 		updateCardColumnId(dragged.id, event.target.id);
@@ -347,17 +346,18 @@ function dropListener(event){
 	else{
 		return 0;
 	}
-	
+
 };
 
 async function updateCardColumnId(cardId, idColumn){
 	let buff = {columnId: +idColumn};
 	await fetch(`http://localhost:8089/api/card/${cardId}`, {
-		method:'PATCH', 
+		method:'PATCH',
 		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
 		body: JSON.stringify(buff)
 	});
 }
+
 
 /***/ }),
 
@@ -381,14 +381,14 @@ Object(_board_js__WEBPACK_IMPORTED_MODULE_0__["outputElements"])();
 /*!**************************************!*\
   !*** ./src/serviseForChangeTheme.js ***!
   \**************************************/
-/*! exports provided: getBgBrightness, themeWhenLoadPage, themeToogleHandler */
+/*! exports provided: getBgBrightness, themeWhenLoadPage, themeChanger */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBgBrightness", function() { return getBgBrightness; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "themeWhenLoadPage", function() { return themeWhenLoadPage; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "themeToogleHandler", function() { return themeToogleHandler; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "themeChanger", function() { return themeChanger; });
 /* harmony import */ var _urlServConf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./urlServConf.js */ "./src/urlServConf.js");
 
 
@@ -397,38 +397,27 @@ async function getBgBrightness(){
   return data.json();
 }
 async function pushTheme(isLight){
+  let obj= {};
+  obj.isLightBg = isLight;
   let response = await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/isLightTheme`,
   {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({isLightBg: isLight})
+      body: JSON.stringify(obj)
   });
-  return response.json();
+  return await response.json();
 }
 
 async function themeWhenLoadPage(){
-  const isLight = await getBgBrightness();
-  console.log(isLight.isLightBg, 'when load');
-  let styleFileName = isLight.isLightBg=="yes" ? 'style.css' : 'nightStyle.css';
-  console.log(styleFileName);
+  let obj = await getBgBrightness();
+  let styleFileName = obj.isLightBg ? 'nightStyle.css' : 'style.css';
   document.querySelector("link").setAttribute('href', styleFileName);
-  document.getElementById('toggle_bg').setAttribute('isLight', isLight.isLightBg);
 }
 
-async function themeToogleHandler(e){
-  let isLight = e.target.getAttribute('isLight');
-  let styleFileName;
-  if(isLight==='yes'){
-    isLight = 'no';
-    styleFileName = 'nightStyle.css';
-  }
-  else{
-    isLight = 'yes';
-    styleFileName = 'style.css';
-  }
-  console.log(isLight);
-  await pushTheme(isLight);
-  document.getElementById('toggle_bg').setAttribute('isLight', isLight);
+async function themeChanger(event){
+  let target = event.target;
+  await pushTheme(target.checked);
+  let styleFileName = target.checked ? 'nightStyle.css' : 'style.css';
   document.querySelector("link").setAttribute('href', styleFileName);
 }
 
@@ -447,7 +436,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "toogleTheme", function() { return toogleTheme; });
 function toogleTheme(){
   let elem = document.createElement('div');
-  elem.id = 'toggle_bg';
+  elem.className = 'toggle_btn';
+  elem.id = '_1st-toggle-btn';
+
+  let input = document.createElement('input');
+  input.type="checkbox";
+  input.className = "toogle_checkbox";
+
+  let span = document.createElement('span');
+
+  let section = document.createElement('section')
+
+  let fragment = document.createDocumentFragment();
+
+  fragment.appendChild(input);
+  fragment.appendChild(span);
+
+  elem.appendChild(fragment);
+
   return elem;
 }
 
