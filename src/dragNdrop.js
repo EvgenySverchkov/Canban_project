@@ -20,14 +20,18 @@ export function dropListener(event){
 	if(event.target.className === 'columns'){
 		dragged.parentNode.removeChild(dragged);
 		event.target.appendChild(dragged);
+		updateCardColumnId(dragged.id, event.target.id);
 	}
-	updateCardColumnId(dragged.id, event.target.id);
+	else{
+		return 0;
+	}
+
 };
 
 async function updateCardColumnId(cardId, idColumn){
 	let buff = {columnId: +idColumn};
 	await fetch(`http://localhost:8089/api/card/${cardId}`, {
-		method:'PATCH', 
+		method:'PATCH',
 		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
 		body: JSON.stringify(buff)
 	});

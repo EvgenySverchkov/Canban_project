@@ -1,6 +1,8 @@
+import {url} from './urlServConf.js';
+
 export function getColumns(){
-	const url = 'http://localhost:8089/api/column';
-	return fetch(url).then(data=>data.json());
+	const data = `${url}/column`;
+	return fetch(data).then(objs=>objs.json());
 }
 
 export function createColumn(InfoOfColumn){
@@ -11,7 +13,7 @@ export function createColumn(InfoOfColumn){
 	let headline = document.createElement('p');//создаем елемент в котором будет заголовок
 	headline.className = 'headline';
 	headline.textContent = InfoOfColumn.title;//добавляем текст в узел заголовка
-		
+
 	let buttonAdd = document.createElement('button');//кнопка для добавление карточек
 	buttonAdd.className = 'addButton';
 	buttonAdd.textContent = 'Add';

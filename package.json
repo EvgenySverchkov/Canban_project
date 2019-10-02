@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "test" : "jest"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +14,7 @@
     "@babel/preset-env": "^7.4.5",
     "babel": "^6.23.0",
     "babel-preset-env": "^1.7.0",
+    "jest": "^24.8.0",
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"

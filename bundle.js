@@ -98,31 +98,36 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "outputElements", function() { return outputElements; });
 /* harmony import */ var _columns_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./columns.js */ "./src/columns.js");
 /* harmony import */ var _cards_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cards.js */ "./src/cards.js");
+/* harmony import */ var _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./dragNdrop.js */ "./src/dragNdrop.js");
+/* harmony import */ var _toogleTheme_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./toogleTheme.js */ "./src/toogleTheme.js");
+/* harmony import */ var _serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serviseForChangeTheme.js */ "./src/serviseForChangeTheme.js");
+
+
+
 
 
 
 async function outputElements(){
 
+	document.body.appendChild(Object(_toogleTheme_js__WEBPACK_IMPORTED_MODULE_3__["toogleTheme"])());
+	Object(_serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeWhenLoadPage"])();
+	
 	let objColumn = await Object(_columns_js__WEBPACK_IMPORTED_MODULE_0__["getColumns"])();
 	let objCard = await Object(_cards_js__WEBPACK_IMPORTED_MODULE_1__["getCards"])();
-	//let objColumn = getColumns();//объекты из хранилища 
-	//let objCard = getCards();
+
 	let parentElement = document.querySelector('.board');//главный (родитель) элемент доски
 	let fragment = document.createDocumentFragment();//содаем фрагмент
 
 	for(let i =0; i<objColumn.length; i++)//блок добавления елементов из сервера
 	{
-
 		let colum = Object(_columns_js__WEBPACK_IMPORTED_MODULE_0__["createColumn"])(objColumn[i]);
 
 		if(objCard)//если карточек нет, ничего не делать
 		{
 			for(let j =0; j<objCard.length; j++)
 			{
-
 				if(+colum.id === objCard[j].columnId){
 					let card = Object(_cards_js__WEBPACK_IMPORTED_MODULE_1__["createCardElement"])(objCard[j]);
-
 					colum.appendChild(card);
 				}
 			}
@@ -132,17 +137,24 @@ async function outputElements(){
 	parentElement.appendChild(fragment);//добавление в родительский элемент
 
 	let mainTableElement = document.querySelector('.board');
+	mainTableElement.addEventListener('click', _cards_js__WEBPACK_IMPORTED_MODULE_1__["addCard"]);
+	mainTableElement.addEventListener('click', async event=>{
+		if(event.target.parentNode.id == event.target.getAttribute("data-card-id"))//проверка для исключения всплытия
+		{
+			const cardId = event.target.getAttribute("data-card-id");
+			Object(_cards_js__WEBPACK_IMPORTED_MODULE_1__["removeCard"])(cardId);
+			event.target.closest(".card").remove();//удаление из доски
+		}
+	});
+	mainTableElement.addEventListener('keypress', _cards_js__WEBPACK_IMPORTED_MODULE_1__["eventPressingEnterListener"]);
+	mainTableElement.addEventListener('focusout', _cards_js__WEBPACK_IMPORTED_MODULE_1__["eventPressingEnterListener"]);
+	mainTableElement.addEventListener('mouseup', _cards_js__WEBPACK_IMPORTED_MODULE_1__["eventPressingEnterListener"]);
 
-  	mainTableElement.addEventListener('click', _cards_js__WEBPACK_IMPORTED_MODULE_1__["addCard"]);
-  	mainTableElement.addEventListener('click', async event=>{
-  		 if(event.target.parentNode.id == event.target.getAttribute("data-card-id"))//проверка для исключения всплытия
-    	{
-  			const cardId = event.target.getAttribute("data-card-id");
-  			Object(_cards_js__WEBPACK_IMPORTED_MODULE_1__["removeCard"])(cardId);
-  			event.target.closest(".card").remove();//удаление из доски
-  		}
-  	});
-  	mainTableElement.addEventListener('keypress', _cards_js__WEBPACK_IMPORTED_MODULE_1__["eventPressingEnterListener"]);
+	document.addEventListener("dragstart", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dragStartListener"]);
+	document.addEventListener("dragover", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dragOverListener"]);
+	document.addEventListener("drop", _dragNdrop_js__WEBPACK_IMPORTED_MODULE_2__["dropListener"]);
+
+	document.getElementById('toggle_bg').addEventListener('click', _serviseForChangeTheme_js__WEBPACK_IMPORTED_MODULE_4__["themeToogleHandler"]);
 }
 
 
@@ -162,28 +174,32 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addCard", function() { return addCard; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "removeCard", function() { return removeCard; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "eventPressingEnterListener", function() { return eventPressingEnterListener; });
+/* harmony import */ var _urlServConf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./urlServConf.js */ "./src/urlServConf.js");
+
+
 async function getCards(){
-  const data = await fetch('http://localhost:3000/api/card');
-	return data.json();
+  const data = await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/card`);
+  return data.json();
 }
 //////////////////////////////создание DOM элемента/////////////////////////////////////////////////
 function createCardElement(infoOfCard){
-
 	let newCard = document.createElement('div');//создаем элемент карточки
 	newCard.id = infoOfCard.id;//добавляем id карточки
-
 	newCard.className = 'card';//добаляем класс (для css) карточки
 
 	let contentNode = document.createElement('p');
 	contentNode.className = 'card-content';
 	contentNode.contentEditable = 'true';
 	contentNode.textContent = infoOfCard.title;
+	contentNode.setAttribute("draggable", false);
 
 	let removeButton = document.createElement('button');//кнопка удаления карточки
 	removeButton.className = 'removeButton';
-  
+	removeButton.innerHTML = '&#10008';
+
 	newCard.setAttribute("data-column", infoOfCard.columnId);//добавляем атрибут для поиска соотвецтвующей коллонки
 	removeButton.setAttribute("data-card-id", infoOfCard.id);//атрибут для обнаружения в какой карточке находится кнопка
+	newCard.setAttribute("draggable", true);
 
 	newCard.appendChild(removeButton);
 	newCard.appendChild(contentNode);
@@ -193,63 +209,60 @@ function createCardElement(infoOfCard){
 //////////////////////////////Обработчик добавления карточки по нажатию на кнопку, в колонку/////////////////////////////////////////////////
 async function addCard(event){
 	if(event.target.className==='addButton'){//исключение всплытия
-  		let text = prompt("Eneter text for new card");
-  		if(text === null || text===''){
-  			return;
-  		}
-
-  		
-  		let saveToStorage = createNewArrCardObj(text, event.target.closest('.columns').id);//объект нового элемента
+		let text = prompt("Eneter text for new card");
+		if(text === null || text===''){
+			return;
+		}
+		let saveToStorage = createNewArrCardObj(text, event.target.closest('.columns').id);//объект нового элемента
 
   		let addNewCardObj = async()=> {
-        let response = await fetch('http://localhost:3000/api/card', 
+  			let response = await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/card`,
   			{
   				method:'post',
   				headers: { 'Content-Type': 'application/json' },
   				body: JSON.stringify(saveToStorage)
   			});
-        return response.json();
-    }
-
-      let newElem = createCardElement(await addNewCardObj());//создаем новый элемент DOM по новому объекту
-      event.target.parentNode.appendChild(newElem);//добавляем элемент DOM в колонку
-    }
-    else
-    	return;
+  			return response.json();
+  		}
+  		let newElem = createCardElement(await addNewCardObj());//создаем новый элемент DOM по новому объекту
+  		event.target.parentNode.appendChild(newElem);//добавляем элемент DOM в колонку
+  	}
+  	else
+  		return;
 }
 //////////////////////////////функция возврата массива с новым объектом элемента/////////////////////////////////////////////////
 function createNewArrCardObj(text, columnId){
   	let objForStorage = {};//обьект для данных о элементе
     objForStorage.title = text;
    	objForStorage.columnId = +columnId;
-   	return objForStorage;    
+   	return objForStorage;
 }
 //////////////////////////////удаление карточки/////////////////////////////////////////////////
 async function removeCard(idCard){
-      fetch(`http://localhost:3000/api/card/${idCard}`, {method:'delete'});
+	fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/card/${idCard}`, {method:'delete'});
 }
 
 function eventPressingEnterListener(event){
 	if(event.target.className == 'card-content'){
 		let idCard = +event.target.closest(".card").id;
 		let text = event.target.textContent;
-		if(event.keyCode === 13){
-		event.preventDefault();
-		updateCard(idCard, text);
-  }
-}
+		if(event.keyCode === 13 || event.type === 'focusout'){
+			event.preventDefault();
+			updateCard(idCard, text);
+		}
+	}
 }
 
 
 async function updateCard(cardId, text){
 	let buff = {title: text};
-
-	await fetch(`http://localhost:3000/api/card/${cardId}`, {
-		method:'PATCH', 
+	await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/card/${cardId}`, {
+		method:'PATCH',
 		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
 		body: JSON.stringify(buff)
 	});
 }
+
 
 /***/ }),
 
@@ -264,9 +277,12 @@ async function updateCard(cardId, text){
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getColumns", function() { return getColumns; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createColumn", function() { return createColumn; });
+/* harmony import */ var _urlServConf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./urlServConf.js */ "./src/urlServConf.js");
+
+
 function getColumns(){
-	const url = 'http://localhost:3000/api/column';
-	return fetch(url).then(data=>data.json());
+	const data = `${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/column`;
+	return fetch(data).then(objs=>objs.json());
 }
 
 function createColumn(InfoOfColumn){
@@ -277,7 +293,7 @@ function createColumn(InfoOfColumn){
 	let headline = document.createElement('p');//создаем елемент в котором будет заголовок
 	headline.className = 'headline';
 	headline.textContent = InfoOfColumn.title;//добавляем текст в узел заголовка
-		
+
 	let buttonAdd = document.createElement('button');//кнопка для добавление карточек
 	buttonAdd.className = 'addButton';
 	buttonAdd.textContent = 'Add';
@@ -286,6 +302,61 @@ function createColumn(InfoOfColumn){
 	newCol.appendChild(buttonAdd);//добавляем кнопку добавления карточек
 
 	return newCol;//вернули массив с созданными колонками
+}
+
+
+/***/ }),
+
+/***/ "./src/dragNdrop.js":
+/*!**************************!*\
+  !*** ./src/dragNdrop.js ***!
+  \**************************/
+/*! exports provided: dragStartListener, dragOverListener, dropListener */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dragStartListener", function() { return dragStartListener; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dragOverListener", function() { return dragOverListener; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "dropListener", function() { return dropListener; });
+var dragged;
+
+function dragStartListener(event){
+	if(event.target.className === 'card-content'){
+		dragged = event.target.closest(".card");
+	}
+	else if(event.target.parentNode.className === 'card-content'){
+		dragged = event.target.parentNode.closest(".card");
+	}
+	else{
+		dragged = event.target;
+	}
+};
+
+ function dragOverListener(event){
+	event.preventDefault();
+};
+
+function dropListener(event){
+	if(event.target.className === 'columns'){
+		console.log(event.target.className);
+		dragged.parentNode.removeChild(dragged);
+		event.target.appendChild(dragged);
+		updateCardColumnId(dragged.id, event.target.id);
+	}
+	else{
+		return 0;
+	}
+	
+};
+
+async function updateCardColumnId(cardId, idColumn){
+	let buff = {columnId: +idColumn};
+	await fetch(`http://localhost:8089/api/card/${cardId}`, {
+		method:'PATCH', 
+		headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+		body: JSON.stringify(buff)
+	});
 }
 
 /***/ }),
@@ -303,6 +374,98 @@ __webpack_require__.r(__webpack_exports__);
 
 
 Object(_board_js__WEBPACK_IMPORTED_MODULE_0__["outputElements"])();
+
+/***/ }),
+
+/***/ "./src/serviseForChangeTheme.js":
+/*!**************************************!*\
+  !*** ./src/serviseForChangeTheme.js ***!
+  \**************************************/
+/*! exports provided: getBgBrightness, themeWhenLoadPage, themeToogleHandler */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBgBrightness", function() { return getBgBrightness; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "themeWhenLoadPage", function() { return themeWhenLoadPage; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "themeToogleHandler", function() { return themeToogleHandler; });
+/* harmony import */ var _urlServConf_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./urlServConf.js */ "./src/urlServConf.js");
+
+
+async function getBgBrightness(){
+  const data = await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/isLightTheme`);
+  return data.json();
+}
+async function pushTheme(isLight){
+  let response = await fetch(`${_urlServConf_js__WEBPACK_IMPORTED_MODULE_0__["url"]}/isLightTheme`,
+  {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({isLightBg: isLight})
+  });
+  return response.json();
+}
+
+async function themeWhenLoadPage(){
+  const isLight = await getBgBrightness();
+  console.log(isLight.isLightBg, 'when load');
+  let styleFileName = isLight.isLightBg=="yes" ? 'style.css' : 'nightStyle.css';
+  console.log(styleFileName);
+  document.querySelector("link").setAttribute('href', styleFileName);
+  document.getElementById('toggle_bg').setAttribute('isLight', isLight.isLightBg);
+}
+
+async function themeToogleHandler(e){
+  let isLight = e.target.getAttribute('isLight');
+  let styleFileName;
+  if(isLight==='yes'){
+    isLight = 'no';
+    styleFileName = 'nightStyle.css';
+  }
+  else{
+    isLight = 'yes';
+    styleFileName = 'style.css';
+  }
+  console.log(isLight);
+  await pushTheme(isLight);
+  document.getElementById('toggle_bg').setAttribute('isLight', isLight);
+  document.querySelector("link").setAttribute('href', styleFileName);
+}
+
+
+/***/ }),
+
+/***/ "./src/toogleTheme.js":
+/*!****************************!*\
+  !*** ./src/toogleTheme.js ***!
+  \****************************/
+/*! exports provided: toogleTheme */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "toogleTheme", function() { return toogleTheme; });
+function toogleTheme(){
+  let elem = document.createElement('div');
+  elem.id = 'toggle_bg';
+  return elem;
+}
+
+
+/***/ }),
+
+/***/ "./src/urlServConf.js":
+/*!****************************!*\
+  !*** ./src/urlServConf.js ***!
+  \****************************/
+/*! exports provided: url */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "url", function() { return url; });
+const url = "http://localhost:8089/api";
+
 
 /***/ })
 
